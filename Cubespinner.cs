@@ -11,7 +11,7 @@ using System;
 public class Cubespinner : MonoBehaviour
 {
     //Globals Declaration
-    private WebSocket ws;
+    public WebSocket ws;
 
     public class PYRData
     {
@@ -24,7 +24,7 @@ public class Cubespinner : MonoBehaviour
         }
     }
     public PYRData pyrData;
-    private bool blue = true;
+    public bool blue = true;
     
     // Start is called before the first frame update
     void Start()
@@ -80,11 +80,11 @@ public class Cubespinner : MonoBehaviour
         var yaw = pyrObj["yaw"].ToObject<float>();
         var pitch = pyrObj["pitch"].ToObject<float>();
         var roll = pyrObj["roll"].ToObject<float>();
-        //Debug.Log(" "+yaw+" "+pitch+" "+roll);
-        GetComponent<Renderer>().material.color = new Color((int)yaw,(int)pitch, (int)roll);
+        Debug.Log(" "+yaw+" "+pitch+" "+roll);
         pyrData.yaw=yaw;
         pyrData.roll=roll;
         pyrData.pitch=pitch;
+        Debug.Log("obj : "+pyrData.yaw+" "+pyrData.pitch+" "+pyrData.roll);
         //transform.Rotate(new Vector3(yaw,pitch,roll));
         // Do something with pyr here
     }
@@ -110,8 +110,8 @@ public class Cubespinner : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        Debug.Log("render : "+pyrData.yaw+" "+pyrData.pitch+" "+pyrData.roll);
         transform.Rotate(new Vector3(pyrData.yaw,pyrData.pitch,pyrData.roll));
-        Debug.Log(" "+pyrData.yaw+" "+pyrData.pitch+" "+pyrData.roll);
         if (Input.GetKeyDown(KeyCode.Space))
        {
             if (blue)
