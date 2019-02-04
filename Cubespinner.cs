@@ -12,7 +12,8 @@ public class Cubespinner : MonoBehaviour
 {
     //Globals Declaration
     public WebSocket ws; 
-    public float speed = 3.6f; 
+    public float SPEED = 2630.6f;
+    public bool PINCHED = false;
 
     public class PYRData
     {
@@ -73,7 +74,7 @@ public class Cubespinner : MonoBehaviour
         };
         ws.Connect();
         ws.Send("{\"type\":\"authentication\" , \"moduleId\":\"uiid\" ,  \"moduleSecret\":\"qwerty\" }");
-        ws.Send("{\"type\":\"setCapabilities\" , \"kaiId\":\"default\" ,  \"pyrData\":true }");
+        ws.Send("{\"type\":\"setCapabilities\" , \"kaiId\":\"default\" ,  \"pyrData\":true  , \"gestureData\":true }");
     }
 
     void HandlePyrData(JObject pyrObj)
@@ -98,21 +99,34 @@ public class Cubespinner : MonoBehaviour
         var y = quaternion["y"].ToObject<float>();
         var z = quaternion["z"].ToObject<float>();
         Debug.Log(" "+w+" "+x+" "+y+" "+z);
-        transform.Rotate(new Vector3(x,y,z),speed*Time.deltaTime);
         // Do something with w, x, y, z here
     }
 
     void HandleGestureData(JObject gestureObj)
     {
         var gesture = gestureObj["gesture"]?.ToObject<string>();
+        
+        switch(gesture){
+            case "pinch3Begin":
+                PINCHED=true;
+                break;
+            case "pinch3End":
+                PINCHED=false;
+                break;
+        }
         // Do something with gesture here
     }
 
     // Update is called once per frame
     void Update()
     {
-        Debug.Log("render : "+pyrData.yaw+" "+pyrData.pitch+" "+pyrData.roll);
-        transform.Rotate(new Vector3(pyrData.yaw,pyrData.pitch,pyrData.roll),speed*Time.deltaTime);
+        Debug.Log("render : "+pyrData.yaw+" "+pyrData.pitch+" "+pyrData.roll);       
+        if(!PINCHED){
+            transform.Rotate(new Vector3(pyrData.yaw,pyrData.pitch,pyrData.roll),SPEED*Time.deltaTime);
+        }
+        else{
+            Debug.Log("Release the PINCH !");
+        }
         if (Input.GetKeyDown(KeyCode.Space))
        {
             if (blue)
