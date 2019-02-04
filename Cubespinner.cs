@@ -11,7 +11,8 @@ using System;
 public class Cubespinner : MonoBehaviour
 {
     //Globals Declaration
-    public WebSocket ws;
+    public WebSocket ws; 
+    public float speed = 3.6f; 
 
     public class PYRData
     {
@@ -97,7 +98,7 @@ public class Cubespinner : MonoBehaviour
         var y = quaternion["y"].ToObject<float>();
         var z = quaternion["z"].ToObject<float>();
         Debug.Log(" "+w+" "+x+" "+y+" "+z);
-        transform.Rotate(new Vector3(x,y,z));
+        transform.Rotate(new Vector3(x,y,z),speed*Time.deltaTime);
         // Do something with w, x, y, z here
     }
 
@@ -111,7 +112,7 @@ public class Cubespinner : MonoBehaviour
     void Update()
     {
         Debug.Log("render : "+pyrData.yaw+" "+pyrData.pitch+" "+pyrData.roll);
-        transform.Rotate(new Vector3(pyrData.yaw,pyrData.pitch,pyrData.roll));
+        transform.Rotate(new Vector3(pyrData.yaw,pyrData.pitch,pyrData.roll),speed*Time.deltaTime);
         if (Input.GetKeyDown(KeyCode.Space))
        {
             if (blue)
