@@ -12,8 +12,9 @@ public class Cubespinner : MonoBehaviour
 {
     //Globals Declaration
     public WebSocket ws; 
-    public float SPEED = 2630.6f;
+    public float SPEED = 263.6f;
     public bool PINCHED = false;
+    public bool GRABBED = false;
 
     public class PYRData
     {
@@ -27,6 +28,8 @@ public class Cubespinner : MonoBehaviour
     }
     public PYRData pyrData;
     public bool blue = true;
+
+    public Quaternion quat = new Quaternion();
     
     // Start is called before the first frame update
     void Start()
@@ -49,7 +52,7 @@ public class Cubespinner : MonoBehaviour
                     break;
                 case "incomingData":
                     JArray dataArray = response["data"]?.ToObject<JArray>();
-                    ;
+
                     foreach (JObject dataObject in dataArray)
                     {
                         JObject dataObj = dataObject.ToObject<JObject>();
@@ -65,6 +68,9 @@ public class Cubespinner : MonoBehaviour
                             case "gestureData":
                                 HandleGestureData(dataObj);
                                 break;
+                            case "fingerShortcutData":
+                                HandleFingerShortcutData(dataObj);
+                                break;
                         }
                     }
 
@@ -74,7 +80,7 @@ public class Cubespinner : MonoBehaviour
         };
         ws.Connect();
         ws.Send("{\"type\":\"authentication\" , \"moduleId\":\"uiid\" ,  \"moduleSecret\":\"qwerty\" }");
-        ws.Send("{\"type\":\"setCapabilities\" , \"kaiId\":\"default\" ,  \"pyrData\":true  , \"gestureData\":true }");
+        ws.Send("{\"type\":\"setCapabilities\" , \"kaiId\":\"default\" ,  \"quaternionData\":true  , \"gestureData\":true , \"fingerShortcutData\":true , \"pyrData\":true }");
     }
 
     void HandlePyrData(JObject pyrObj)
@@ -98,6 +104,7 @@ public class Cubespinner : MonoBehaviour
         var x = quaternion["x"].ToObject<float>();
         var y = quaternion["y"].ToObject<float>();
         var z = quaternion["z"].ToObject<float>();
+        quat.Set(x, y, z, w);
         Debug.Log(" "+w+" "+x+" "+y+" "+z);
         // Do something with w, x, y, z here
     }
@@ -105,30 +112,44 @@ public class Cubespinner : MonoBehaviour
     void HandleGestureData(JObject gestureObj)
     {
         var gesture = gestureObj["gesture"]?.ToObject<string>();
-        
-        switch(gesture){
-            case "pinch3Begin":
-                PINCHED=true;
-                break;
-            case "pinch3End":
-                PINCHED=false;
-                break;
+
+        if(gesture=="pinch3Begin")
+        {
+            PINCHED=true;
+        }
+        else if(gesture=="pinch3End")
+        {
+            PINCHED=false;
         }
         // Do something with gesture here
     }
 
+    void HandleFingerShortcutData(JObject fingerShortcutObj){
+
+        JArray fingers = fingerShortcutObj["fingers"].ToObject<JArray>();
+
+        foreach(bool finger in fingers){
+            if(finger==false){
+                GRABBED=false;
+                return;
+            }
+        }
+        GRABBED = true;
+    }
+
     // Update is called once per frame
     void Update()
-    {
-        Debug.Log("render : "+pyrData.yaw+" "+pyrData.pitch+" "+pyrData.roll);       
-        if(!PINCHED){
-            transform.Rotate(new Vector3(pyrData.yaw,pyrData.pitch,pyrData.roll),SPEED*Time.deltaTime);
+    {    
+        if(GRABBED){
+            transform.rotation=quat;
         }
-        else{
-            Debug.Log("Release the PINCH !");
+        //Debug.Log("render : "+pyrData.yaw+" "+pyrData.pitch+" "+pyrData.roll);
+        //transform.localScale = new Vector3(pyrData.pitch, pyrData.pitch, pyrData.pitch);
+        if(PINCHED){
+            Debug.Log("render : "+pyrData.yaw+" "+pyrData.pitch+" "+pyrData.roll);   
+            transform.localScale = new Vector3(pyrData.pitch, pyrData.pitch, pyrData.pitch);
         }
-        if (Input.GetKeyDown(KeyCode.Space))
-       {
+        if (Input.GetKeyDown(KeyCode.Space)){
             if (blue)
             {
                 GetComponent<Renderer>().material.color = new Color(255, 0, 0);
